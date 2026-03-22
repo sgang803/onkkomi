@@ -1,0 +1,264 @@
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+html {
+  height: 100%;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* 모바일: 더블탭 줌 지연 완화, 가로 스크롤/드래그 시 페이지 흔들림 완화 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(124, 92, 255, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+
+/* 홈(/) 로딩 스피너 — app/(home)/loading.tsx */
+@keyframes dressup-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.dressup-home-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--background);
+}
+
+.dressup-home-loading__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.dressup-spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid rgba(124, 92, 255, 0.2);
+  border-top-color: #7c5cff;
+  animation: dressup-spin 0.75s linear infinite;
+}
+
+.dressup-home-loading__text {
+  font-size: 14px;
+  color: #666;
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .dressup-home-loading__text {
+    color: #aaa;
+  }
+}
+
+/* ── 넓은 PC(가로 1400px 이상): 앱 숨기고 OG 안내만 표시. 태블릿은 앱 유지 ── */
+.dressup-shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  width: 100%;
+  min-width: 0;
+}
+
+.dressup-desktop-gate {
+  display: none;
+}
+
+.dressup-mobile-app {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+@media (min-width: 1400px) {
+  .dressup-desktop-gate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 100dvh;
+    padding: max(24px, env(safe-area-inset-top)) 24px max(32px, env(safe-area-inset-bottom));
+    box-sizing: border-box;
+    background: linear-gradient(180deg, #fff8f6 0%, #f0ebe8 100%);
+    color: #3d2a28;
+  }
+
+  .dressup-desktop-gate__inner {
+    max-width: 560px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .dressup-desktop-gate__og {
+    width: 100%;
+    max-width: min(100%, 520px);
+    height: auto;
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(61, 42, 40, 0.12);
+  }
+
+  .dressup-desktop-gate__lead {
+    margin: 0;
+    font-size: clamp(1.15rem, 2.5vw, 1.4rem);
+    font-weight: 800;
+    color: #6b4540;
+    letter-spacing: -0.02em;
+  }
+
+  .dressup-desktop-gate__text {
+    margin: 0;
+    font-size: clamp(0.95rem, 2vw, 1.05rem);
+    line-height: 1.55;
+    color: #7a5a55;
+    max-width: 400px;
+  }
+
+  .dressup-mobile-app {
+    display: none !important;
+  }
+}
+
+/* 404: 넓은 PC에서도 본문 표시 (기본은 모바일 게이트만 보임) */
+@media (min-width: 1400px) {
+  .dressup-shell:has(.dressup-not-found) .dressup-desktop-gate {
+    display: none !important;
+  }
+
+  .dressup-shell:has(.dressup-not-found) .dressup-mobile-app {
+    display: flex !important;
+  }
+}
+
+/* ── 404 페이지 ── */
+.dressup-not-found {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: max(16px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom));
+  min-height: 100dvh;
+  width: 100%;
+  box-sizing: border-box;
+  background: linear-gradient(180deg, #fff8f6 0%, #feeaa9 55%, #f8e8c8 100%);
+  gap: 12px;
+}
+
+.dressup-not-found__code {
+  margin: 0;
+  font-size: clamp(2.5rem, 10vw, 3.25rem);
+  font-weight: 800;
+  color: #e5645e;
+  letter-spacing: -0.04em;
+}
+
+.dressup-not-found__lead {
+  margin: 0;
+  font-size: clamp(1.05rem, 4vw, 1.25rem);
+  font-weight: 800;
+  color: #6b4540;
+}
+
+.dressup-not-found__hint {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #7a5a55;
+  text-align: center;
+  max-width: 320px;
+}
+
+.dressup-not-found__video-wrap {
+  position: relative;
+  width: 100%;
+  max-width: min(320px, 100%);
+  aspect-ratio: 9 / 16;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(61, 42, 40, 0.18);
+  background: #111;
+}
+
+.dressup-not-found__video-wrap iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.dressup-not-found__home {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 22px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #fff;
+  background: #e5645e;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(229, 100, 94, 0.35);
+}
+
+.dressup-not-found__home:hover {
+  filter: brightness(1.06);
+}
+
+.dressup-not-found__home:active {
+  filter: brightness(0.96);
+}
