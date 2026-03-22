@@ -1,8 +1,0 @@
-# Next.js on Netlify — https://docs.netlify.com/frameworks/next-js/overview/
-[build]
-  command = "npm run build"
-  publish = ".next"
-
-[build.environment]
-  # Next 16 권장 (Netlify 기본보다 명시)
-  NODE_VERSION = "20"

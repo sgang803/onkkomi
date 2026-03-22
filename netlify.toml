@@ -1,0 +1,13 @@
+# 저장소 루트는 DD — Netlify는 여기 있는 netlify.toml만 자동으로 읽습니다.
+# Next 앱은 web/ 안에 있으므로 base 를 반드시 지정합니다.
+[build]
+  base = "web"
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Next.js App Router 를 Netlify에서 쓰려면 플러그인 필요 (단순 .next 업로드만으로는 404 남)
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
