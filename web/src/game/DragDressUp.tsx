@@ -22,6 +22,7 @@ import {
 import { Layer } from "@/game/dressUpTypes";
 import { loadImageMeta } from "@/game/loadImageMeta";
 import { STAGE_FIXED_WIDTH_PX, THEME } from "@/game/themeColors";
+import { BtnKoEn, EnLine } from "@/ui/Bilingual";
 import { Container, Page, Subtitle, Title } from "@/ui/primitives";
 import {
   DRAFT_STORAGE_KEY,
@@ -311,10 +312,17 @@ export default function DragDressUp({ characterId }: { characterId: string }) {
         <Container>
           <Title style={{ marginBottom: 6, color: THEME.accent }}>
             온꼬미즈 꾸미기
+            <EnLine style={{ color: "#8a6b66", fontWeight: 500 }}>
+              Onkkomiz Dress Up
+            </EnLine>
           </Title>
           <Subtitle style={{ marginBottom: 14, color: "#6b4540" }}>
             아래 아이템을 <strong>드래그</strong>해 위 캐릭터에 올리세요. 올린
             레이어를 누르면 맨 앞으로 올라옵니다.
+            <EnLine style={{ color: "#8a6b66", marginTop: 6 }}>
+              Drag items onto the character. Tap a layer to bring it to the
+              front.
+            </EnLine>
           </Subtitle>
 
           <PlayCanvas>
@@ -421,33 +429,73 @@ export default function DragDressUp({ characterId }: { characterId: string }) {
                 onClick={() => {
                   router.push("/");
                 }}
-                style={{ fontSize: 12, fontWeight: 800 }}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 800,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  lineHeight: 1.2,
+                }}
               >
-                온꼬미즈 다시 선택하기
+                <BtnKoEn
+                  ko="온꼬미즈 다시 선택하기"
+                  en="Pick another character"
+                />
               </AccentSecondaryButton>
               <StageActions style={{ width: "auto", margin: 0 }}>
                 <AccentPrimaryButton
                   $primary
                   onClick={handleShowResult}
                   disabled={!stageReady}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    lineHeight: 1.2,
+                  }}
                 >
-                  결과보기 →
+                  <BtnKoEn ko="결과보기 →" en="View result →" />
                 </AccentPrimaryButton>
                 <AccentSecondaryButton
                   onClick={() => {
                     setLayers([]);
                   }}
                   disabled={!stageReady}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    lineHeight: 1.2,
+                  }}
                 >
-                  초기화
+                  <BtnKoEn ko="초기화" en="Reset" />
                 </AccentSecondaryButton>
               </StageActions>
             </PlayToolbar>
 
             <ItemStripSection>
-              <ItemStripLabel>아이템</ItemStripLabel>
+              <ItemStripLabel>
+                아이템
+                <EnLine
+                  style={{
+                    fontSize: "0.72em",
+                    fontWeight: 700,
+                    marginTop: 4,
+                    opacity: 0.9,
+                  }}
+                >
+                  Items
+                </EnLine>
+              </ItemStripLabel>
               <InventoryHint>
                 썸네일을 끌어 위 캐릭터 영역에 놓을 수 있어요.
+                <EnLine style={{ marginTop: 5, fontSize: 11, opacity: 0.95 }}>
+                  Drag a thumbnail onto the character.
+                </EnLine>
               </InventoryHint>
               <ItemGrid>
                 {ITEMS.map((item) => (

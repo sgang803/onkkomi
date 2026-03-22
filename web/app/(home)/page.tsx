@@ -17,6 +17,7 @@ import {
   PreviewFrame,
   PreviewImg,
 } from "@/game/DressUpLayouts";
+import { BtnKoEn, EnLine } from "@/ui/Bilingual";
 import { Container, Input, Subtitle } from "@/ui/primitives";
 import { NICKNAME_STORAGE_KEY } from "@/game/draftStorage";
 
@@ -69,6 +70,9 @@ export default function Home() {
             }}
           >
             꾸미고 싶은 온꼬미즈를 선택한 후 닉네임을 적고 아래 버튼을 눌러주세요🌸
+            <EnLine style={{ color: "#8a6b66", marginTop: 6 }}>
+              Pick an Onkkomiz, enter a nickname, then tap the button below.
+            </EnLine>
           </Subtitle>
 
           <div
@@ -89,6 +93,9 @@ export default function Home() {
               }}
             >
               닉네임
+              <EnLine style={{ fontSize: "0.78em", marginTop: 2, opacity: 0.9 }}>
+                Nickname
+              </EnLine>
             </label>
             <Input
               value={nickname}
@@ -132,6 +139,13 @@ export default function Home() {
                   <HomeCTAButton
                     $primary
                     type="button"
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      lineHeight: 1.2,
+                    }}
                     onClick={() => {
                       try {
                         sessionStorage.setItem(
@@ -146,7 +160,10 @@ export default function Home() {
                       );
                     }}
                   >
-                    이 온꼬미즈로 꾸미기 →
+                    <BtnKoEn
+                      ko="이 온꼬미즈로 꾸미기 →"
+                      en="Dress up with this character →"
+                    />
                   </HomeCTAButton>
                 </>
               ) : null}

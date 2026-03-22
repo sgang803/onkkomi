@@ -10,6 +10,7 @@ import {
   ResultCard,
 } from "@/game/DressUpLayouts";
 import { THEME } from "@/game/themeColors";
+import { BtnKoEn, EnLine } from "@/ui/Bilingual";
 import { Container, Page, Subtitle, Title } from "@/ui/primitives";
 import { CHARACTERS } from "@/game/assets";
 import { loadImageMeta } from "@/game/loadImageMeta";
@@ -187,9 +188,17 @@ export default function ResultPage() {
       <ResultAppBackground>
         <Page style={{ background: "transparent" }}>
           <Container>
-            <Title style={{ color: THEME.accent }}>결과를 불러올 수 없어요</Title>
+            <Title style={{ color: THEME.accent }}>
+              결과를 불러올 수 없어요
+              <EnLine style={{ color: "#8a6b66", fontWeight: 500 }}>
+                Couldn&apos;t load your result
+              </EnLine>
+            </Title>
             <Subtitle style={{ color: "#6b4540" }}>
               이전 페이지에서 드래그 후 `결과보기`를 눌러주세요.
+              <EnLine style={{ color: "#8a6b66", marginTop: 6 }}>
+                Go back, dress up, then tap &quot;View result&quot;.
+              </EnLine>
             </Subtitle>
             <div style={{ marginTop: 12 }}>
               <AccentPrimaryButton
@@ -197,8 +206,15 @@ export default function ResultPage() {
                 onClick={() => {
                   router.push("/");
                 }}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  lineHeight: 1.2,
+                }}
               >
-                홈으로 이동 →
+                <BtnKoEn ko="홈으로 이동 →" en="Go home →" />
               </AccentPrimaryButton>
             </div>
           </Container>
@@ -227,6 +243,9 @@ export default function ResultPage() {
               }}
             >
               완성! 정말 멋지네요!
+              <EnLine style={{ color: "#8a6b66", fontWeight: 500 }}>
+                All done! Looks amazing!
+              </EnLine>
             </Title>
             <Subtitle
               style={{
@@ -240,6 +259,11 @@ export default function ResultPage() {
               {isDesktop
                 ? "어때요? 마음에 드시나요?? 마음에 안들면 다시하기를 눌러서 더 멋지게 꾸며보세요!!"
                 : "어때요? 마음에 드시나요?? 마음에 안들면 다시하기를 눌러서 더 멋지게 꾸며보세요!!"}
+              <EnLine style={{ color: "#8a6b66", marginTop: 6 }}>
+                {isDesktop
+                  ? "Tap “Try again” to tweak your look. Screenshot to share your outfit."
+                  : "Tap “Try again” to tweak your look."}
+              </EnLine>
             </Subtitle>
           </div>
 
@@ -299,6 +323,9 @@ export default function ResultPage() {
                 ) : (
                   <div style={{ padding: 18, color: "#9a5c58", textAlign: "center" }}>
                     뚝딱뚝딱 합성하는중…
+                    <EnLine style={{ marginTop: 4, fontSize: 11, opacity: 0.9 }}>
+                      Composing…
+                    </EnLine>
                   </div>
                 )}
               </div>
@@ -318,6 +345,13 @@ export default function ResultPage() {
                 <AccentPrimaryButton
                   $primary
                   disabled={isSharing}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    lineHeight: 1.2,
+                  }}
                   onClick={async () => {
                     setIsSharing(true);
                     setError(null);
@@ -335,12 +369,25 @@ export default function ResultPage() {
                     }
                   }}
                 >
-                  {urlCopied ? "복사됨!" : isSharing ? "복사 중…" : "URL 복사하기"}
+                  {urlCopied ? (
+                    <BtnKoEn ko="복사됨!" en="Copied!" />
+                  ) : isSharing ? (
+                    <BtnKoEn ko="복사 중…" en="Copying…" />
+                  ) : (
+                    <BtnKoEn ko="URL 복사하기" en="Copy URL" />
+                  )}
                 </AccentPrimaryButton>
               ) : (
                 <AccentPrimaryButton
                   $primary
                   disabled={isSharing || !previewUrl}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    lineHeight: 1.2,
+                  }}
                   onClick={async () => {
                     const canvas = canvasRef.current;
                     if (!canvas) return;
@@ -361,7 +408,11 @@ export default function ResultPage() {
                     }
                   }}
                 >
-                  {isSharing ? "열기 중…" : "공유하기"}
+                  {isSharing ? (
+                    <BtnKoEn ko="로딩 중…" en="Working…" />
+                  ) : (
+                    <BtnKoEn ko="공유하기" en="Share" />
+                  )}
                 </AccentPrimaryButton>
               )}
 
@@ -372,8 +423,15 @@ export default function ResultPage() {
                   );
                 }}
                 disabled={isSharing}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  lineHeight: 1.2,
+                }}
               >
-                다시 하기
+                <BtnKoEn ko="다시 하기" en="Try again" />
               </AccentSecondaryButton>
             </div>
 
@@ -387,10 +445,53 @@ export default function ResultPage() {
               }}
             >
               {isDesktop
-                ? "다른 사람에게 보내도 같은 꾸미기 결과는 보이지 않아요. 공유하려면 화면을 캡처해 주세요."
+                ? "다른 사람에게 보내도 같은 꾸미기 결과는 보이지 않아요. 결과를 공유하려면 화면을 캡처해 주세요."
                 : "친구와 공유하고 누가더 멋지게 꾸미나 자랑해보세요!"}
+              <EnLine style={{ marginTop: 5, fontSize: 11, opacity: 0.92 }}>
+                {isDesktop
+                  ? "The link won’t show your outfit—screenshot to share."
+                  : "Share with friends and show off your style!"}
+              </EnLine>
             </p>
           </div>
+
+          <footer
+            style={{
+              marginTop: "clamp(28px, 7vw, 44px)",
+              paddingTop: 18,
+              paddingBottom: "clamp(12px, 3vw, 20px)",
+              borderTop: `1px solid ${THEME.accent}26`,
+              textAlign: "center",
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                fontSize: 11,
+                color: "#8a6b66",
+                lineHeight: 1.55,
+                letterSpacing: "0.02em",
+              }}
+            >
+              © {new Date().getFullYear()} 온꼬미즈 꾸미기
+            </p>
+            <p
+              style={{
+                margin: "6px 0 0",
+                fontSize: 11,
+                color: "#a88882",
+                lineHeight: 1.55,
+                whiteSpace: "pre-line",
+              }}
+            >
+              {`제작 · FUSE추추
+문의 및 피드백 · @7ggxx
+
+캐릭터·원본 이미지의 저작권은 ©ONKOMIZ에 있습니다. 본 페이지는 해당 자산을 활용해 제작·운영됩니다.
+
+본 페이지·꾸미기 결과 화면 등 서비스 콘텐츠의 무단 복제·배포·상업적 이용을 금합니다.`}
+            </p>
+          </footer>
         </Container>
       </Page>
     </ResultAppBackground>
