@@ -80,50 +80,35 @@ async function copyTextToClipboard(text: string): Promise<void> {
   document.body.removeChild(ta);
 }
 
-/** Web Share API로 이미지 공유, 미지원 시 다운로드 (모바일용) */
-async function shareOrDownloadPng(opts: {
-  canvas: HTMLCanvasElement;
-  nicknameLabel: string;
-  onError: (msg: string) => void;
-}): Promise<void> {
-  const { canvas, nicknameLabel, onError } = opts;
-  const blob = await new Promise<Blob | null>((resolve) => {
-    canvas.toBlob((b) => resolve(b), "image/png");
-  });
-  if (!blob) {
-    onError("이미지를 만들 수 없어요.");
-    return;
-  }
+/** 홈 URL 공유(OG 미리보기) — Web Share 미지원 시 클립보드 복사 */
+async function shareSiteHomeUrl(opts: { onError: (msg: string) => void }) {
+  const { onError } = opts;
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : "";
+  const envBase = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
+  const homeUrl =
+    envBase && /^https?:\/\//i.test(envBase) ? `${envBase}/` : `${origin}/`;
 
-  const safeName = nicknameLabel.replace(/[^\w가-힣\-]/g, "_").slice(0, 24) || "onkkomiz";
-  const filename = `온꼬미즈_${safeName}.png`;
-  const file = new File([blob], filename, { type: "image/png" });
-  const title = `${nicknameLabel}의 온꼬미즈`;
-  const text = "온꼬미즈 꾸미기 결과";
+  const title = "온꼬미즈 꾸미기";
+  const text = "온꼬미즈를 드래그로 꾸며보세요!";
 
   if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-    const withFiles = { title, text, files: [file] };
-    if (navigator.canShare?.(withFiles)) {
-      try {
-        await navigator.share(withFiles);
-        return;
-      } catch (e) {
-        if (e instanceof DOMException && e.name === "AbortError") return;
-        // 그 외 실패 시 다운로드로 폴백
-      }
+    try {
+      await navigator.share({ title, text, url: homeUrl });
+      return;
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") return;
     }
   }
 
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.rel = "noopener";
-  a.click();
-  URL.revokeObjectURL(url);
+  try {
+    await copyTextToClipboard(homeUrl);
+  } catch (e) {
+    onError(e instanceof Error ? e.message : "링크를 복사하지 못했어요.");
+  }
 }
 
-/** 넓은 PC(1400px+) — URL 복사. 태블릿·모바일은 이미지 공유 */
+/** 넓은 PC(1400px+) — URL 복사. 모바일은 사이트 링크 공유 */
 function useIsDesktop() {
   const [desktop, setDesktop] = useState(false);
   useEffect(() => {
@@ -445,7 +430,7 @@ export default function ResultPage() {
               ) : (
                 <AccentPrimaryButton
                   $primary
-                  disabled={isSharing || !previewUrl}
+                  disabled={isSharing}
                   style={{
                     display: "flex",
                     flexDirection: "column",
@@ -454,14 +439,10 @@ export default function ResultPage() {
                     lineHeight: 1.2,
                   }}
                   onClick={async () => {
-                    const canvas = canvasRef.current;
-                    if (!canvas) return;
                     setIsSharing(true);
                     setError(null);
                     try {
-                      await shareOrDownloadPng({
-                        canvas,
-                        nicknameLabel,
+                      await shareSiteHomeUrl({
                         onError: (msg) => setError(msg),
                       });
                     } catch (e) {
@@ -474,7 +455,7 @@ export default function ResultPage() {
                   }}
                 >
                   {isSharing ? (
-                    <BtnKoEn ko="로딩 중…" en="Working…" />
+                    <BtnKoEn ko="열기 중…" en="Opening…" />
                   ) : (
                     <BtnKoEn ko="공유하기" en="Share" />
                   )}
@@ -509,11 +490,11 @@ export default function ResultPage() {
             >
               {isDesktop
                 ? "다른 사람에게 보내도 같은 꾸미기 결과는 보이지 않아요. 결과를 공유하려면 화면을 캡처해 주세요."
-                : "친구와 공유하고 누가더 멋지게 꾸미나 자랑해보세요!"}
+                : "공유하기는 이 꾸미기 사이트 주소가 전달돼요. 완성 이미지는 캡처해서 사용해 주세요."}
               <EnLine style={{ marginTop: 5, fontSize: 11, opacity: 0.92 }}>
                 {isDesktop
                   ? "The link won’t show your outfit—screenshot to share."
-                  : "Share with friends and show off your style!"}
+                  : "Share sends the app link (rich preview). Screenshot your outfit to share the image."}
               </EnLine>
             </p>
           </div>
