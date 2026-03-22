@@ -18,7 +18,42 @@ import {
   DRAFT_STORAGE_KEY,
   type SavedDraft,
 } from "@/game/draftStorage";
+import type { Layer } from "@/game/dressUpTypes";
 import { DESKTOP_ONLY_MIN_WIDTH_PX } from "@/game/breakpoints";
+
+/** 합성 PNG 논리 좌표계에서 바깥으로 나간 레이어까지 포함할 때 캔버스 가장자리 여백 */
+const EXPORT_LOGICAL_PAD = 28;
+
+type MetaWH = { w: number; h: number };
+
+/**
+ * 베이스(0,0)~(logicalW, logicalH) + 모든 레이어 사각형의 합집합 + 패딩으로 캔버스 크기 결정
+ */
+function computeExportRect(
+  logicalW: number,
+  logicalH: number,
+  layers: Layer[],
+  metaByUrl: Record<string, MetaWH | undefined>
+): { minX: number; minY: number; width: number; height: number } {
+  let minX = 0;
+  let minY = 0;
+  let maxX = logicalW;
+  let maxY = logicalH;
+
+  for (const l of layers) {
+    const meta = metaByUrl[l.imageUrl];
+    const iw = meta?.w ?? 64;
+    const ih = meta?.h ?? 64;
+    minX = Math.min(minX, l.x);
+    minY = Math.min(minY, l.y);
+    maxX = Math.max(maxX, l.x + iw);
+    maxY = Math.max(maxY, l.y + ih);
+  }
+
+  const width = Math.max(1, Math.ceil(maxX - minX + 2 * EXPORT_LOGICAL_PAD));
+  const height = Math.max(1, Math.ceil(maxY - minY + 2 * EXPORT_LOGICAL_PAD));
+  return { minX, minY, width, height };
+}
 
 function loadHTMLImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -143,16 +178,8 @@ export default function ResultPage() {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        canvas.width = draft.stage.logicalW;
-        canvas.height = draft.stage.logicalH;
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const baseImg = await loadHTMLImage(character.baseImageUrl);
-        ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
+        const logicalW = draft.stage.logicalW;
+        const logicalH = draft.stage.logicalH;
 
         const metasArr = await Promise.all(
           [...new Set(draft.layers.map((l) => l.imageUrl))].map(async (url) => {
@@ -160,17 +187,39 @@ export default function ResultPage() {
             return [url, m] as const;
           })
         );
-        const metaByUrl = Object.fromEntries(metasArr);
+        const metaByUrl = Object.fromEntries(metasArr) as Record<
+          string,
+          MetaWH | undefined
+        >;
+
+        const { minX, minY, width: cw, height: ch } = computeExportRect(
+          logicalW,
+          logicalH,
+          draft.layers,
+          metaByUrl
+        );
+
+        canvas.width = cw;
+        canvas.height = ch;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const ox = EXPORT_LOGICAL_PAD - minX;
+        const oy = EXPORT_LOGICAL_PAD - minY;
+
+        const baseImg = await loadHTMLImage(character.baseImageUrl);
+        ctx.drawImage(baseImg, 0, 0, logicalW, logicalH, ox, oy, logicalW, logicalH);
 
         const sorted = [...draft.layers].sort((a, b) => a.z - b.z);
         for (const l of sorted) {
           const img = await loadHTMLImage(l.imageUrl);
-          const meta = metaByUrl[l.imageUrl] as
-            | { w: number; h: number }
-            | undefined;
+          const meta = metaByUrl[l.imageUrl];
           const iw = meta?.w ?? img.naturalWidth;
           const ih = meta?.h ?? img.naturalHeight;
-          ctx.drawImage(img, l.x, l.y, iw, ih);
+          ctx.drawImage(img, 0, 0, iw, ih, ox + l.x, oy + l.y, iw, ih);
         }
 
         const url = canvas.toDataURL("image/png");
@@ -288,8 +337,9 @@ export default function ResultPage() {
                 maxWidth: 520,
                 margin: "0 auto",
                 width: "100%",
+                minWidth: 0,
                 padding: 16,
-                background: "linear-gradient(180deg, #fff8f6 0%, #fff 100%)",
+                background: "#fff",
                 border: `2px solid ${THEME.accent}33`,
               }}
             >
@@ -301,16 +351,23 @@ export default function ResultPage() {
                   color: THEME.accent,
                   marginBottom: 12,
                   letterSpacing: "-0.02em",
+                  backgroundColor: "#fff",
+                  borderRadius: 8,
+                  padding: "8px 4px",
                 }}
               >
                 {nicknameLabel}
               </div>
+              {/* 합성 PNG가 가로로 넓을 때 flex min-width 때문에 잘리지 않게: minWidth 0 + contain */}
               <div
                 style={{
                   width: "100%",
+                  maxWidth: "min(320px, 100%)",
+                  minWidth: 0,
+                  margin: "0 auto",
                   borderRadius: 12,
-                  overflow: "hidden",
-                  boxShadow: "0 4px 20px rgba(107, 69, 64, 0.12)",
+                  backgroundColor: "#fff",
+                  lineHeight: 0,
                 }}
               >
                 {previewUrl ? (
@@ -318,7 +375,15 @@ export default function ResultPage() {
                   <img
                     src={previewUrl}
                     alt={`${nicknameLabel}의 완성본`}
-                    style={{ width: "100%", height: "auto", display: "block" }}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      maxWidth: "100%",
+                      minWidth: 0,
+                      height: "auto",
+                      objectFit: "contain",
+                      borderRadius: 12,
+                    }}
                   />
                 ) : (
                   <div style={{ padding: 18, color: "#9a5c58", textAlign: "center" }}>
@@ -418,9 +483,7 @@ export default function ResultPage() {
 
               <AccentSecondaryButton
                 onClick={() => {
-                  router.push(
-                    `/play?characterId=${encodeURIComponent(draft.characterId)}`
-                  );
+                  router.push("/");
                 }}
                 disabled={isSharing}
                 style={{
@@ -487,9 +550,10 @@ export default function ResultPage() {
               {`제작 · FUSE추추
 문의 및 피드백 · @7ggxx
 
-캐릭터·원본 이미지의 저작권은 ©ONKOMIZ에 있습니다. 본 페이지는 해당 자산을 활용해 제작·운영됩니다.
-
-본 페이지·꾸미기 결과 화면 등 서비스 콘텐츠의 무단 복제·배포·상업적 이용을 금합니다.`}
+캐릭터·원본 이미지의 저작권은 ©ONKOMIZ에 있습니다. 
+본 페이지는 해당 자산을 활용해 제작·운영되며
+꾸미기 결과 화면 등 서비스 콘텐츠의 
+무단 복제·배포·상업적 이용을 금합니다.`}
             </p>
           </footer>
         </Container>

@@ -88,6 +88,12 @@ export default function DragDressUp({ characterId }: { characterId: string }) {
 
   const stageReady = mounted && baseMeta !== null;
 
+  /**
+   * 스테이지 ref만 바뀌면 레이어 좌표(스케일)가 갱신되지 않음 → 클라이언트 라우팅 직후 UI 깨짐.
+   * 측정 후 tick 올려 리렌더 유도.
+   */
+  const [, setStageMeasureTick] = useState(0);
+
   const itemMetaList = useMemo(() => ITEMS.map((o) => o.id), []);
 
   const maxZ = useMemo(() => {
@@ -95,29 +101,69 @@ export default function DragDressUp({ characterId }: { characterId: string }) {
   }, [layers]);
 
   useEffect(() => {
-    const update = () => {
-      const el = stageRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
+    const el = stageRef.current;
+    if (!el) return;
+
+    const applyRect = (rect: DOMRect) => {
       if (rect.width <= 0 || rect.height <= 0) return;
       const domW = rect.width;
       const domH = rect.height;
+      const prev = stageMetricsRef.current;
+      const scaleX = domW / logicalW;
+      const scaleY = domH / logicalH;
       stageMetricsRef.current = {
-        ...stageMetricsRef.current,
+        ...prev,
         left: rect.left,
         top: rect.top,
         domW,
         domH,
         logicalW,
         logicalH,
-        scaleX: domW / logicalW,
-        scaleY: domH / logicalH,
+        scaleX,
+        scaleY,
       };
+      const firstLayout = prev.domW <= 1 || prev.domH <= 1;
+      const scaleChanged =
+        Math.abs(prev.scaleX - scaleX) > 1e-5 ||
+        Math.abs(prev.scaleY - scaleY) > 1e-5 ||
+        Math.abs(prev.domW - domW) > 0.5 ||
+        Math.abs(prev.domH - domH) > 0.5;
+      if (firstLayout || scaleChanged) {
+        setStageMeasureTick((t) => t + 1);
+      }
     };
 
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    const measure = () => {
+      applyRect(el.getBoundingClientRect());
+    };
+
+    /** 레이아웃·폰트·Soft navigation 직후 0크기로 측정되는 경우 대비 */
+    const measureRaf = () => {
+      requestAnimationFrame(() => {
+        measure();
+        requestAnimationFrame(measure);
+      });
+    };
+
+    measureRaf();
+
+    const ro = new ResizeObserver(() => {
+      measureRaf();
+    });
+    ro.observe(el);
+
+    const onResize = () => measureRaf();
+    window.addEventListener("resize", onResize);
+
+    /** 스크롤 시 getBoundingClientRect 보정(포인터 좌표용). 리렌더는 스케일 변할 때만 */
+    const onScroll = () => measure();
+    window.addEventListener("scroll", onScroll, true);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll, true);
+    };
   }, [logicalW, logicalH]);
 
   useEffect(() => {
@@ -479,24 +525,9 @@ export default function DragDressUp({ characterId }: { characterId: string }) {
 
             <ItemStripSection>
               <ItemStripLabel>
-                아이템
-                <EnLine
-                  style={{
-                    fontSize: "0.72em",
-                    fontWeight: 700,
-                    marginTop: 4,
-                    opacity: 0.9,
-                  }}
-                >
-                  Items
-                </EnLine>
-              </ItemStripLabel>
-              <InventoryHint>
-                썸네일을 끌어 위 캐릭터 영역에 놓을 수 있어요.
-                <EnLine style={{ marginTop: 5, fontSize: 11, opacity: 0.95 }}>
-                  Drag a thumbnail onto the character.
-                </EnLine>
-              </InventoryHint>
+                
+                꾸미기 아이템 (Items) 클릭아니고 드래그(Drag) 하세요!
+                </ItemStripLabel>
               <ItemGrid>
                 {ITEMS.map((item) => (
                   <ItemDragChip
